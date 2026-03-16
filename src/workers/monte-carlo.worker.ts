@@ -28,8 +28,9 @@ function runSimulation(params: SimulationParams): SimulationResult {
   const weights = ASSET_CLASS_IDS.map((id) => allocations[id] / 100);
   const L = choleskyDecomposition(CORRELATION_MATRIX);
 
-  const monthlyTotals: number[][] = Array.from({ length: totalMonths + 1 }, () => new Float64Array(numSimulations) as unknown as number[]);
+  const monthlyTotals: Float64Array[] = Array.from({ length: totalMonths + 1 }, () => new Float64Array(numSimulations));
   const finalValues = new Float64Array(numSimulations);
+  let bankruptcyCount = 0;
 
   for (let sim = 0; sim < numSimulations; sim++) {
     const holdings = new Float64Array(n);
@@ -39,6 +40,7 @@ function runSimulation(params: SimulationParams): SimulationResult {
 
     let total = initialAmount;
     monthlyTotals[0][sim] = total;
+    let wentBankrupt = false;
 
     for (let month = 1; month <= totalMonths; month++) {
       const z = new Float64Array(n);
@@ -51,11 +53,10 @@ function runSimulation(params: SimulationParams): SimulationResult {
         x[i] = sum;
       }
 
-      total = 0;
+      // クランプなし — 破産判定のため負値も追跡
       for (let i = 0; i < n; i++) {
         const r = monthlyReturns[i] + monthlyStdDevs[i] * x[i];
         holdings[i] *= 1 + r;
-        if (holdings[i] < 0) holdings[i] = 0;
       }
 
       for (let i = 0; i < n; i++) {
@@ -71,9 +72,12 @@ function runSimulation(params: SimulationParams): SimulationResult {
       total = 0;
       for (let i = 0; i < n; i++) total += holdings[i];
       monthlyTotals[month][sim] = total;
+
+      if (total <= 0) wentBankrupt = true;
     }
 
     finalValues[sim] = total;
+    if (wentBankrupt) bankruptcyCount++;
   }
 
   const percentiles: MonthlyPercentiles[] = [];
@@ -99,6 +103,7 @@ function runSimulation(params: SimulationParams): SimulationResult {
     principal,
     p10Final: percentile(sortedFinal, 10),
     p90Final: percentile(sortedFinal, 90),
+    bankruptcyProbability: bankruptcyCount / numSimulations,
   };
 }
 

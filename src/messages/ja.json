@@ -14,8 +14,7 @@
     "cash": "現金",
     "foreignStock": "外国株",
     "japanStock": "日本株",
-    "foreignBond": "外国債券",
-    "japanBond": "日本国債",
+    "bond": "債券",
     "gold": "金",
     "bitcoin": "ビットコイン"
   },
@@ -35,8 +34,11 @@
     "principal": "元本合計",
     "upper10": "上位10%",
     "lower10": "下位10%",
+    "bankruptcyProbability": "破産確率（途中で一度でも0以下）",
     "year": "年",
     "tenThousandYen": "万円",
-    "frequency": "頻度"
+    "frequency": "頻度",
+    "logScale": "対数スケール",
+    "linearScale": "線形スケール"
   }
 }

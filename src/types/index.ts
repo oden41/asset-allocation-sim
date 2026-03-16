@@ -2,8 +2,7 @@ export type AssetClassId =
   | "cash"
   | "foreignStock"
   | "japanStock"
-  | "foreignBond"
-  | "japanBond"
+  | "bond"
   | "gold"
   | "bitcoin";
 
@@ -38,4 +37,5 @@ export interface SimulationResult {
   principal: number;
   p10Final: number;
   p90Final: number;
+  bankruptcyProbability: number; // 途中で一度でも0以下になる確率
 }

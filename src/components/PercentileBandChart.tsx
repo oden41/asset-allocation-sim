@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { MonthlyPercentiles } from "@/types";
 import {
@@ -23,77 +24,60 @@ function formatAmount(value: number): string {
 
 export default function PercentileBandChart({ data }: Props) {
   const t = useTranslations("results");
+  const [logScale, setLogScale] = useState(false);
 
-  // 月→年に変換し、12ヶ月ごとにサンプリング
   const chartData = data
     .filter((d) => d.month % 12 === 0)
     .map((d) => ({
       year: d.month / 12,
-      p5: Math.round(d.p5),
-      p25: Math.round(d.p25),
-      p50: Math.round(d.p50),
-      p75: Math.round(d.p75),
-      p95: Math.round(d.p95),
+      // 対数スケール時は0以下を小さな正値に置換
+      p5:  logScale ? Math.max(d.p5,  1) : d.p5,
+      p25: logScale ? Math.max(d.p25, 1) : d.p25,
+      p50: logScale ? Math.max(d.p50, 1) : d.p50,
+      p75: logScale ? Math.max(d.p75, 1) : d.p75,
+      p95: logScale ? Math.max(d.p95, 1) : d.p95,
     }));
 
   return (
     <div>
-      <h3 className="text-base font-semibold mb-3">{t("percentileChart")}</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-base font-semibold">{t("percentileChart")}</h3>
+        <button
+          onClick={() => setLogScale((v) => !v)}
+          className={`rounded px-3 py-1 text-xs font-medium transition ${
+            logScale
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+          }`}
+        >
+          {logScale ? t("logScale") : t("linearScale")}
+        </button>
+      </div>
       <ResponsiveContainer width="100%" height={350}>
-        <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+        <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
           <XAxis
             dataKey="year"
-            label={{ value: t("year"), position: "insideBottom", offset: -2 }}
+            label={{ value: t("year"), position: "insideBottom", offset: -10 }}
           />
-          <YAxis tickFormatter={formatAmount} />
+          <YAxis
+            tickFormatter={formatAmount}
+            scale={logScale ? "log" : "auto"}
+            domain={logScale ? ["auto", "auto"] : [0, "auto"]}
+            allowDataOverflow={false}
+          />
           <Tooltip
-            formatter={(value) => [`${Number(value).toLocaleString()} ${t("tenThousandYen")}`, ""]}
+            formatter={(value) => [`${formatAmount(Number(value))} ${t("tenThousandYen")}`, ""]}
             labelFormatter={(label) => `${label}${t("year")}`}
           />
-          {/* 90%信頼区間 (p5-p95) */}
-          <Area
-            type="monotone"
-            dataKey="p95"
-            stroke="none"
-            fill="#3b82f6"
-            fillOpacity={0.15}
-            name="95th"
-          />
-          <Area
-            type="monotone"
-            dataKey="p5"
-            stroke="none"
-            fill="#ffffff"
-            fillOpacity={1}
-            name="5th"
-          />
-          {/* 50%信頼区間 (p25-p75) */}
-          <Area
-            type="monotone"
-            dataKey="p75"
-            stroke="none"
-            fill="#3b82f6"
-            fillOpacity={0.3}
-            name="75th"
-          />
-          <Area
-            type="monotone"
-            dataKey="p25"
-            stroke="none"
-            fill="#ffffff"
-            fillOpacity={1}
-            name="25th"
-          />
+          {/* 90%帯 (p5〜p95): 薄い色 */}
+          <Area type="monotone" dataKey="p95" stroke="none" fill="#3b82f6" fillOpacity={0.15} isAnimationActive={false} />
+          <Area type="monotone" dataKey="p5"  stroke="none" fill="white"  fillOpacity={1}    isAnimationActive={false} />
+          {/* 50%帯 (p25〜p75): 濃い色 */}
+          <Area type="monotone" dataKey="p75" stroke="none" fill="#3b82f6" fillOpacity={0.35} isAnimationActive={false} />
+          <Area type="monotone" dataKey="p25" stroke="none" fill="white"  fillOpacity={1}    isAnimationActive={false} />
           {/* 中央値 */}
-          <Area
-            type="monotone"
-            dataKey="p50"
-            stroke="#2563eb"
-            strokeWidth={2}
-            fill="none"
-            name={t("median")}
-          />
+          <Area type="monotone" dataKey="p50" stroke="#2563eb" strokeWidth={2} fill="none" isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

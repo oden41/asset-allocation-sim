@@ -10,13 +10,12 @@ interface Props {
 }
 
 const COLORS: Record<AssetClassId, string> = {
-  cash: "bg-gray-400",
+  cash:         "bg-gray-400",
   foreignStock: "bg-blue-500",
-  japanStock: "bg-red-500",
-  foreignBond: "bg-cyan-500",
-  japanBond: "bg-green-500",
-  gold: "bg-yellow-500",
-  bitcoin: "bg-orange-500",
+  japanStock:   "bg-red-500",
+  bond:         "bg-cyan-500",
+  gold:         "bg-yellow-500",
+  bitcoin:      "bg-orange-500",
 };
 
 export default function AllocationSliders({ allocations, onChange }: Props) {
@@ -55,7 +54,7 @@ export default function AllocationSliders({ allocations, onChange }: Props) {
       {ASSET_CLASS_IDS.map((id) => (
         <div key={id} className="flex items-center gap-3">
           <div className={`w-3 h-3 rounded-sm shrink-0 ${COLORS[id]}`} />
-          <span className="text-sm w-24 shrink-0">{t(id)}</span>
+          <span className="text-sm w-20 shrink-0">{t(id)}</span>
           <input
             type="range"
             min={0}

@@ -11,7 +11,7 @@ function randomNormal(): number {
   return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
 }
 
-/** 配列のパーセンタイルを計算 */
+/** 配列のパーセンタイルを計算（ソート済み配列を受け取る） */
 function percentile(sorted: number[], p: number): number {
   const idx = (p / 100) * (sorted.length - 1);
   const lower = Math.floor(idx);
@@ -35,13 +35,11 @@ export function runSimulation(params: SimulationParams): SimulationResult {
   // コレスキー分解
   const L = choleskyDecomposition(CORRELATION_MATRIX);
 
-  // 全パスの月次ポートフォリオ合計を格納
-  // monthlyTotals[month][simulation]
-  const monthlyTotals: number[][] = Array.from({ length: totalMonths + 1 }, () => new Float64Array(numSimulations) as unknown as number[]);
-  const finalValues: number[] = new Float64Array(numSimulations) as unknown as number[];
+  const monthlyTotals: Float64Array[] = Array.from({ length: totalMonths + 1 }, () => new Float64Array(numSimulations));
+  const finalValues = new Float64Array(numSimulations);
+  let bankruptcyCount = 0;
 
   for (let sim = 0; sim < numSimulations; sim++) {
-    // 各資産の保有額
     const holdings = new Float64Array(n);
     for (let i = 0; i < n; i++) {
       holdings[i] = initialAmount * weights[i];
@@ -49,30 +47,24 @@ export function runSimulation(params: SimulationParams): SimulationResult {
 
     let total = initialAmount;
     monthlyTotals[0][sim] = total;
+    let wentBankrupt = false;
 
     for (let month = 1; month <= totalMonths; month++) {
-      // 独立な標準正規乱数ベクトル
       const z = new Float64Array(n);
-      for (let i = 0; i < n; i++) {
-        z[i] = randomNormal();
-      }
+      for (let i = 0; i < n; i++) z[i] = randomNormal();
 
       // 相関付き乱数: x = L * z
       const x = new Float64Array(n);
       for (let i = 0; i < n; i++) {
         let sum = 0;
-        for (let j = 0; j <= i; j++) {
-          sum += L[i][j] * z[j];
-        }
+        for (let j = 0; j <= i; j++) sum += L[i][j] * z[j];
         x[i] = sum;
       }
 
-      // 各資産にリターンを適用
-      total = 0;
+      // 各資産にリターンを適用（クランプなし）
       for (let i = 0; i < n; i++) {
         const r = monthlyReturns[i] + monthlyStdDevs[i] * x[i];
         holdings[i] *= 1 + r;
-        if (holdings[i] < 0) holdings[i] = 0;
       }
 
       // 毎月の積立を配分比率で追加
@@ -90,9 +82,12 @@ export function runSimulation(params: SimulationParams): SimulationResult {
       total = 0;
       for (let i = 0; i < n; i++) total += holdings[i];
       monthlyTotals[month][sim] = total;
+
+      if (total <= 0) wentBankrupt = true;
     }
 
     finalValues[sim] = total;
+    if (wentBankrupt) bankruptcyCount++;
   }
 
   // 各月のパーセンタイルを計算
@@ -109,7 +104,6 @@ export function runSimulation(params: SimulationParams): SimulationResult {
     });
   }
 
-  // 最終値のソートとパーセンタイル
   const sortedFinal = Array.from(finalValues).sort((a, b) => a - b);
   const principal = initialAmount + monthlyAmount * totalMonths;
 
@@ -120,5 +114,6 @@ export function runSimulation(params: SimulationParams): SimulationResult {
     principal,
     p10Final: percentile(sortedFinal, 10),
     p90Final: percentile(sortedFinal, 90),
+    bankruptcyProbability: bankruptcyCount / numSimulations,
   };
 }

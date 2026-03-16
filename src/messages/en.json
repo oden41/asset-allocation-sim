@@ -14,8 +14,7 @@
     "cash": "Cash",
     "foreignStock": "Foreign Stocks",
     "japanStock": "Japan Stocks",
-    "foreignBond": "Foreign Bonds",
-    "japanBond": "Japan Govt Bonds",
+    "bond": "Bonds",
     "gold": "Gold",
     "bitcoin": "Bitcoin"
   },
@@ -35,8 +34,11 @@
     "principal": "Total Principal",
     "upper10": "90th Percentile",
     "lower10": "10th Percentile",
+    "bankruptcyProbability": "Bankruptcy Risk (ever reaches ≤0)",
     "year": "Year",
     "tenThousandYen": "10K JPY",
-    "frequency": "Frequency"
+    "frequency": "Frequency",
+    "logScale": "Log Scale",
+    "linearScale": "Linear Scale"
   }
 }
