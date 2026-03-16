@@ -1,0 +1,42 @@
+{
+  "title": "資産配分シミュレーター",
+  "subtitle": "モンテカルロ法で将来の資産推移をシミュレーション",
+  "investment": {
+    "title": "投資条件",
+    "initialAmount": "初期投資額（万円）",
+    "monthlyAmount": "毎月積立額（万円）",
+    "years": "投資期間（年）",
+    "yearsUnit": "年"
+  },
+  "allocation": {
+    "title": "資産配分",
+    "total": "合計",
+    "cash": "現金",
+    "foreignStock": "外国株",
+    "japanStock": "日本株",
+    "foreignBond": "外国債券",
+    "japanBond": "日本国債",
+    "gold": "金",
+    "bitcoin": "ビットコイン"
+  },
+  "rebalance": {
+    "title": "リバランス",
+    "annual": "年次リバランスあり",
+    "none": "リバランスなし"
+  },
+  "simulate": "シミュレーション実行",
+  "simulating": "計算中...",
+  "results": {
+    "title": "シミュレーション結果",
+    "percentileChart": "資産推移（パーセンタイル帯）",
+    "histogram": "最終資産額の分布",
+    "summary": "サマリー",
+    "median": "中央値",
+    "principal": "元本合計",
+    "upper10": "上位10%",
+    "lower10": "下位10%",
+    "year": "年",
+    "tenThousandYen": "万円",
+    "frequency": "頻度"
+  }
+}
