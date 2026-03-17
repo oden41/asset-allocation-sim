@@ -38,9 +38,9 @@ export default function ResultsSummary({ result }: Props) {
 
       {/* 破産確率 */}
       <div className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
-        <span className="text-sm text-gray-600 dark:text-gray-400">{t("bankruptcyProbability")}</span>
-        <span className={`text-lg font-bold ${result.bankruptcyProbability > 0.05 ? "text-red-500" : result.bankruptcyProbability > 0 ? "text-yellow-500" : "text-green-600"}`}>
-          {(result.bankruptcyProbability * 100).toFixed(2)}%
+        <span className="text-sm text-gray-600 dark:text-gray-400">{t("principalLossProbability")}</span>
+        <span className={`text-lg font-bold ${result.principalLossProbability > 0.3 ? "text-red-500" : result.principalLossProbability > 0.1 ? "text-yellow-500" : "text-green-600"}`}>
+          {(result.principalLossProbability * 100).toFixed(1)}%
         </span>
       </div>
     </div>

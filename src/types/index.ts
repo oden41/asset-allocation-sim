@@ -37,5 +37,5 @@ export interface SimulationResult {
   principal: number;
   p10Final: number;
   p90Final: number;
-  bankruptcyProbability: number; // 途中で一度でも0以下になる確率
+  principalLossProbability: number; // 最終資産額が元本を下回る確率
 }

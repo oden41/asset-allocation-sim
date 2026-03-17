@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { AssetClassId, SimulationParams, SimulationResult } from "@/types";
 import { DEFAULT_ALLOCATIONS, ASSET_CLASS_IDS } from "@/lib/asset-data";
 import InvestmentForm from "./InvestmentForm";
@@ -13,8 +13,12 @@ import ResultsSummary from "./ResultsSummary";
 
 const NUM_SIMULATIONS = 10000;
 
+// 英語では日本株を非表示（外国株を「Stocks」として統合）
+const EN_HIDDEN: AssetClassId[] = ["japanStock"];
+
 export default function SimulationPanel() {
   const t = useTranslations();
+  const locale = useLocale();
 
   const [initialAmount, setInitialAmount] = useState(500);
   const [monthlyAmount, setMonthlyAmount] = useState(5);
@@ -25,6 +29,21 @@ export default function SimulationPanel() {
   const [isRunning, setIsRunning] = useState(false);
   const workerRef = useRef<Worker | null>(null);
 
+  // ロケールが英語に変わったら日本株の配分を外国株に吸収
+  useEffect(() => {
+    if (locale === "en" && allocations.japanStock > 0) {
+      setAllocations((prev) => ({
+        ...prev,
+        foreignStock: Math.min(100, prev.foreignStock + prev.japanStock),
+        japanStock: 0,
+      }));
+    }
+  }, [locale]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const visibleIds = locale === "en"
+    ? ASSET_CLASS_IDS.filter((id) => !EN_HIDDEN.includes(id))
+    : ASSET_CLASS_IDS;
+
   const total = ASSET_CLASS_IDS.reduce((sum, id) => sum + allocations[id], 0);
   const isValid = total === 100;
 
@@ -33,10 +52,7 @@ export default function SimulationPanel() {
 
     setIsRunning(true);
 
-    // 既存のWorkerを終了
-    if (workerRef.current) {
-      workerRef.current.terminate();
-    }
+    if (workerRef.current) workerRef.current.terminate();
 
     const worker = new Worker(
       new URL("../workers/monte-carlo.worker.ts", import.meta.url)
@@ -82,7 +98,11 @@ export default function SimulationPanel() {
             onYearsChange={setYears}
           />
 
-          <AllocationSliders allocations={allocations} onChange={setAllocations} />
+          <AllocationSliders
+            allocations={allocations}
+            visibleIds={visibleIds}
+            onChange={setAllocations}
+          />
 
           <RebalanceToggle rebalance={rebalance} onChange={setRebalance} />
 
@@ -105,16 +125,11 @@ export default function SimulationPanel() {
             <>
               <ResultsSummary result={result} />
               <PercentileBandChart data={result.percentiles} />
-              <HistogramChart
-                finalValues={result.finalValues}
-                median={result.medianFinal}
-              />
+              <HistogramChart finalValues={result.finalValues} median={result.medianFinal} />
             </>
           ) : (
             <div className="flex h-full items-center justify-center text-gray-400">
-              <p className="text-center">
-                {t("simulate")}
-              </p>
+              <p className="text-center">{t("simulate")}</p>
             </div>
           )}
         </div>

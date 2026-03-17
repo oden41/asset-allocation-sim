@@ -37,7 +37,7 @@ export function runSimulation(params: SimulationParams): SimulationResult {
 
   const monthlyTotals: Float64Array[] = Array.from({ length: totalMonths + 1 }, () => new Float64Array(numSimulations));
   const finalValues = new Float64Array(numSimulations);
-  let bankruptcyCount = 0;
+  let principalLossCount = 0;
 
   for (let sim = 0; sim < numSimulations; sim++) {
     const holdings = new Float64Array(n);
@@ -47,8 +47,6 @@ export function runSimulation(params: SimulationParams): SimulationResult {
 
     let total = initialAmount;
     monthlyTotals[0][sim] = total;
-    let wentBankrupt = false;
-
     for (let month = 1; month <= totalMonths; month++) {
       const z = new Float64Array(n);
       for (let i = 0; i < n; i++) z[i] = randomNormal();
@@ -83,11 +81,9 @@ export function runSimulation(params: SimulationParams): SimulationResult {
       for (let i = 0; i < n; i++) total += holdings[i];
       monthlyTotals[month][sim] = total;
 
-      if (total <= 0) wentBankrupt = true;
     }
 
     finalValues[sim] = total;
-    if (wentBankrupt) bankruptcyCount++;
   }
 
   // 各月のパーセンタイルを計算
@@ -107,6 +103,10 @@ export function runSimulation(params: SimulationParams): SimulationResult {
   const sortedFinal = Array.from(finalValues).sort((a, b) => a - b);
   const principal = initialAmount + monthlyAmount * totalMonths;
 
+  for (let sim = 0; sim < numSimulations; sim++) {
+    if (finalValues[sim] < principal) principalLossCount++;
+  }
+
   return {
     percentiles,
     finalValues: Array.from(finalValues),
@@ -114,6 +114,6 @@ export function runSimulation(params: SimulationParams): SimulationResult {
     principal,
     p10Final: percentile(sortedFinal, 10),
     p90Final: percentile(sortedFinal, 90),
-    bankruptcyProbability: bankruptcyCount / numSimulations,
+    principalLossProbability: principalLossCount / numSimulations,
   };
 }

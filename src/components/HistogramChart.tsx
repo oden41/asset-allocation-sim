@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   BarChart,
@@ -18,50 +19,77 @@ interface Props {
 }
 
 function formatAmount(value: number): string {
-  if (value >= 10000) return `${(value / 10000).toFixed(1)}億`;
-  if (value <= -10000) return `${(value / 10000).toFixed(1)}億`;
+  const abs = Math.abs(value);
+  if (abs >= 10000) return `${(value / 10000).toFixed(1)}億`;
   return `${Math.round(value)}`;
 }
 
 export default function HistogramChart({ finalValues, median }: Props) {
   const t = useTranslations("results");
-
-  // 外れ値を除外してビン範囲を決定（P1〜P99）
-  const sorted = [...finalValues].sort((a, b) => a - b);
-  const n = sorted.length;
-  const p1 = sorted[Math.floor(0.01 * (n - 1))];
-  const p99 = sorted[Math.min(Math.ceil(0.99 * (n - 1)), n - 1)];
-  const range = p99 - p1 || 1;
+  const [logScale, setLogScale] = useState(false);
 
   const numBins = 40;
-  const binWidth = range / numBins;
+  const positiveValues = finalValues.filter((v) => v > 0);
+  const sorted = [...positiveValues].sort((a, b) => a - b);
+  const n = sorted.length;
 
-  const bins: { midpoint: number; count: number }[] = Array.from({ length: numBins }, (_, i) => ({
-    midpoint: p1 + (i + 0.5) * binWidth,
-    count: 0,
-  }));
+  // P1〜P99の範囲でビン作成
+  const p1  = sorted[Math.max(0, Math.floor(0.01 * (n - 1)))];
+  const p99 = sorted[Math.min(n - 1, Math.ceil(0.99 * (n - 1)))];
 
-  let clippedLow = 0;
-  let clippedHigh = 0;
+  const bins: { midpoint: number; count: number }[] = logScale
+    ? (() => {
+        // 対数スペースで等幅ビン（log-normal分布に最適）
+        const logMin = Math.log(Math.max(p1, 1));
+        const logMax = Math.log(Math.max(p99, 1));
+        const logBinWidth = (logMax - logMin) / numBins || 0.1;
+        return Array.from({ length: numBins }, (_, i) => ({
+          midpoint: Math.exp(logMin + (i + 0.5) * logBinWidth),
+          count: 0,
+        }));
+      })()
+    : (() => {
+        const binWidth = (p99 - p1) / numBins || 1;
+        return Array.from({ length: numBins }, (_, i) => ({
+          midpoint: p1 + (i + 0.5) * binWidth,
+          count: 0,
+        }));
+      })();
 
-  for (const v of finalValues) {
-    if (v < p1) {
-      clippedLow++;
-    } else if (v > p99) {
-      clippedHigh++;
-    } else {
-      const idx = Math.min(Math.floor((v - p1) / binWidth), numBins - 1);
+  for (const v of positiveValues) {
+    if (logScale) {
+      const logMin = Math.log(Math.max(p1, 1));
+      const logMax = Math.log(Math.max(p99, 1));
+      const logBinWidth = (logMax - logMin) / numBins || 0.1;
+      const logV = Math.log(Math.max(v, 1));
+      const idx = Math.min(numBins - 1, Math.max(0, Math.floor((logV - logMin) / logBinWidth)));
       bins[idx].count++;
+    } else {
+      const binWidth = (p99 - p1) / numBins || 1;
+      if (v < p1) { bins[0].count++; }
+      else if (v > p99) { bins[numBins - 1].count++; }
+      else {
+        const idx = Math.min(numBins - 1, Math.floor((v - p1) / binWidth));
+        bins[idx].count++;
+      }
     }
   }
 
-  // 端のビンに外れ値を加算して表示
-  if (clippedLow > 0) bins[0].count += clippedLow;
-  if (clippedHigh > 0) bins[numBins - 1].count += clippedHigh;
-
   return (
     <div>
-      <h3 className="text-base font-semibold mb-3">{t("histogram")}</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-base font-semibold">{t("histogram")}</h3>
+        <button
+          onClick={() => setLogScale((v) => !v)}
+          className={`rounded px-3 py-1 text-xs font-medium transition ${
+            logScale
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+          }`}
+        >
+          {logScale ? t("logScale") : t("linearScale")}
+        </button>
+      </div>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={bins} margin={{ top: 5, right: 20, left: 20, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />

@@ -34,7 +34,7 @@
     "principal": "元本合計",
     "upper10": "上位10%",
     "lower10": "下位10%",
-    "bankruptcyProbability": "破産確率（途中で一度でも0以下）",
+    "principalLossProbability": "元本割れ確率（最終資産額が元本を下回る）",
     "year": "年",
     "tenThousandYen": "万円",
     "frequency": "頻度",

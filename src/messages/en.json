@@ -3,8 +3,8 @@
   "subtitle": "Monte Carlo simulation of future portfolio growth",
   "investment": {
     "title": "Investment Conditions",
-    "initialAmount": "Initial Investment (10K JPY)",
-    "monthlyAmount": "Monthly Contribution (10K JPY)",
+    "initialAmount": "Initial Investment (K$)",
+    "monthlyAmount": "Monthly Contribution (K$)",
     "years": "Investment Period (Years)",
     "yearsUnit": "yrs"
   },
@@ -12,7 +12,7 @@
     "title": "Asset Allocation",
     "total": "Total",
     "cash": "Cash",
-    "foreignStock": "Foreign Stocks",
+    "foreignStock": "Stocks",
     "japanStock": "Japan Stocks",
     "bond": "Bonds",
     "gold": "Gold",
@@ -34,9 +34,9 @@
     "principal": "Total Principal",
     "upper10": "90th Percentile",
     "lower10": "10th Percentile",
-    "bankruptcyProbability": "Bankruptcy Risk (ever reaches ≤0)",
+    "principalLossProbability": "Principal Loss Rate (final value < total invested)",
     "year": "Year",
-    "tenThousandYen": "10K JPY",
+    "tenThousandYen": "K$",
     "frequency": "Frequency",
     "logScale": "Log Scale",
     "linearScale": "Linear Scale"
