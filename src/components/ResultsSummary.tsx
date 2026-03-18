@@ -14,6 +14,8 @@ export default function ResultsSummary({ result }: Props) {
     { label: t("median"),    value: result.medianFinal, highlight: true },
     { label: t("principal"), value: result.principal,   highlight: false },
     { label: t("upper10"),   value: result.p90Final,    highlight: false },
+    { label: t("upper25"),   value: result.p75Final,    highlight: false },
+    { label: t("lower25"),   value: result.p25Final,    highlight: false },
     { label: t("lower10"),   value: result.p10Final,    highlight: false },
   ];
 
@@ -21,7 +23,7 @@ export default function ResultsSummary({ result }: Props) {
     <div className="space-y-3">
       <h3 className="text-base font-semibold">{t("summary")}</h3>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {moneyItems.map((item) => (
           <div
             key={item.label}

@@ -10,18 +10,19 @@ import RebalanceToggle from "./RebalanceToggle";
 import PercentileBandChart from "./PercentileBandChart";
 import HistogramChart from "./HistogramChart";
 import ResultsSummary from "./ResultsSummary";
+import CorrelationMatrixTable from "./CorrelationMatrixTable";
 
 const NUM_SIMULATIONS = 10000;
 
-// 英語では日本株を非表示（外国株を「Stocks」として統合）
+// In English mode, hide Japan stocks (merged into foreign stocks as "Stocks")
 const EN_HIDDEN: AssetClassId[] = ["japanStock"];
 
 export default function SimulationPanel() {
   const t = useTranslations();
   const locale = useLocale();
 
-  const [initialAmount, setInitialAmount] = useState(500);
-  const [monthlyAmount, setMonthlyAmount] = useState(5);
+  const [initialAmount, setInitialAmount] = useState(locale === "en" ? 100 : 1000);
+  const [monthlyAmount, setMonthlyAmount] = useState(locale === "en" ? 1 : 10);
   const [years, setYears] = useState(20);
   const [allocations, setAllocations] = useState<Record<AssetClassId, number>>(DEFAULT_ALLOCATIONS);
   const [rebalance, setRebalance] = useState(true);
@@ -29,7 +30,7 @@ export default function SimulationPanel() {
   const [isRunning, setIsRunning] = useState(false);
   const workerRef = useRef<Worker | null>(null);
 
-  // ロケールが英語に変わったら日本株の配分を外国株に吸収
+  // When switching to English locale, absorb Japan stock allocation into foreign stocks
   useEffect(() => {
     if (locale === "en" && allocations.japanStock > 0) {
       setAllocations((prev) => ({
@@ -87,7 +88,7 @@ export default function SimulationPanel() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
-        {/* 入力パネル */}
+        {/* Input panel */}
         <div className="space-y-6">
           <InvestmentForm
             initialAmount={initialAmount}
@@ -119,7 +120,7 @@ export default function SimulationPanel() {
           </button>
         </div>
 
-        {/* 結果パネル */}
+        {/* Results panel */}
         <div className="space-y-8">
           {result ? (
             <>
@@ -133,6 +134,10 @@ export default function SimulationPanel() {
             </div>
           )}
         </div>
+      </div>
+      {/* Correlation matrix */}
+      <div className="mt-8 border-t pt-8 border-gray-200 dark:border-gray-700">
+        <CorrelationMatrixTable />
       </div>
     </div>
   );

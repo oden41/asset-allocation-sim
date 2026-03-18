@@ -51,7 +51,7 @@ function runSimulation(params: SimulationParams): SimulationResult {
         x[i] = sum;
       }
 
-      // クランプなし — 破産判定のため負値も追跡
+      // No clamping — negative values are preserved to track principal loss probability
       for (let i = 0; i < n; i++) {
         const r = monthlyReturns[i] + monthlyStdDevs[i] * x[i];
         holdings[i] *= 1 + r;
@@ -102,6 +102,8 @@ function runSimulation(params: SimulationParams): SimulationResult {
     medianFinal: percentile(sortedFinal, 50),
     principal,
     p10Final: percentile(sortedFinal, 10),
+    p25Final: percentile(sortedFinal, 25),
+    p75Final: percentile(sortedFinal, 75),
     p90Final: percentile(sortedFinal, 90),
     principalLossProbability: principalLossCount / numSimulations,
   };

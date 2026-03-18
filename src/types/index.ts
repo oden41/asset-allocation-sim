@@ -36,6 +36,8 @@ export interface SimulationResult {
   medianFinal: number;
   principal: number;
   p10Final: number;
+  p25Final: number;
+  p75Final: number;
   p90Final: number;
   principalLossProbability: number; // 最終資産額が元本を下回る確率
 }

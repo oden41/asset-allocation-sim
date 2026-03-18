@@ -9,8 +9,8 @@ export const ASSET_CLASS_IDS: AssetClassId[] = [
   "bitcoin",
 ];
 
-// 過去約20年の代表的指標に基づく年率リターン・標準偏差（概算）
-// bond: 外国債券・日本国債を統合したブレンド（FTSE世界国債ベース）
+// Approximate annualized return and standard deviation based on ~20-year historical data.
+// bond: blended foreign/Japan bonds (FTSE World Government Bond basis)
 export const ASSET_CLASSES: Record<AssetClassId, AssetClass> = {
   cash:         { id: "cash",         annualReturn: 0.001, annualStdDev: 0.001 },
   foreignStock: { id: "foreignStock", annualReturn: 0.08,  annualStdDev: 0.18  },
@@ -20,22 +20,35 @@ export const ASSET_CLASSES: Record<AssetClassId, AssetClass> = {
   bitcoin:      { id: "bitcoin",      annualReturn: 0.30,  annualStdDev: 0.70  },
 };
 
-// 6×6 相関行列（行・列の順序はASSET_CLASS_IDSと同じ）
+// 6×6 correlation matrix (row/column order matches ASSET_CLASS_IDS)
 // [Cash, ForeignStock, JapanStock, Bond, Gold, Bitcoin]
+//
+// Measured pairwise correlations of monthly returns, computed from Stooq monthly closing prices.
+// Source: https://stooq.com
+//   ForeignStock: SPY (S&P 500 ETF)       Feb 2005 – Dec 2024 (238 months)
+//   JapanStock:   ^TPX (TOPIX Index)      Jan 2005 – Dec 2024 (239 months)
+//   Bond:         AGG (US Agg Bond ETF)   Feb 2005 – Dec 2024 (238 months)
+//   Gold:         GLD (Gold ETF)          Feb 2005 – Dec 2024 (238 months)
+//   Bitcoin:      BTC-USD                 Jan 2015 – Dec 2024 (119 months)
+//   Cash:         assumed uncorrelated with all other assets
+//
+// Note 1: AGG and GLD launched in 2004, so the common period for all non-BTC assets starts 2005.
+//         Data before 2005 is unavailable for bonds and gold via public sources.
+// Note 2: BTC correlations are computed over the overlapping period with each counterpart.
 export const CORRELATION_MATRIX: number[][] = [
-  [1.0,  0.0,  0.0,  0.0,  0.0,  0.0 ],  // Cash
-  [0.0,  1.0,  0.65, 0.1,  0.05, 0.35],  // ForeignStock
-  [0.0,  0.65, 1.0,  0.05, 0.1,  0.25],  // JapanStock
-  [0.0,  0.1,  0.05, 1.0,  0.05, 0.0 ],  // Bond
-  [0.0,  0.05, 0.1,  0.05, 1.0,  0.15],  // Gold
-  [0.0,  0.35, 0.25, 0.0,  0.15, 1.0 ],  // Bitcoin
+  [ 1.0,   0.0,    0.0,   0.0,   0.0,   0.0 ],  // Cash
+  [ 0.0,   1.0,    0.637, 0.239, 0.084, 0.351],  // ForeignStock (SPY)
+  [ 0.0,   0.637,  1.0,  -0.067,-0.142, 0.196],  // JapanStock (^TPX)
+  [ 0.0,   0.239, -0.067, 1.0,   0.331, 0.192],  // Bond (AGG)
+  [ 0.0,   0.084, -0.142, 0.331, 1.0,   0.115],  // Gold (GLD)
+  [ 0.0,   0.351,  0.196, 0.192, 0.115, 1.0  ],  // Bitcoin (BTC-USD)
 ];
 
 export const DEFAULT_ALLOCATIONS: Record<AssetClassId, number> = {
-  cash:         10,
+  cash:         25,
   foreignStock: 30,
   japanStock:   20,
-  bond:         20,
+  bond:         10,
   gold:         10,
-  bitcoin:      10,
+  bitcoin:      5,
 };

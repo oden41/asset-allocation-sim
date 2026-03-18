@@ -1,5 +1,6 @@
 /**
- * コレスキー分解: 正定値対称行列Aに対し、A = LL^T となる下三角行列Lを返す
+ * Cholesky decomposition: for a positive-definite symmetric matrix A, returns
+ * the lower-triangular matrix L such that A = LL^T.
  */
 export function choleskyDecomposition(matrix: number[][]): number[][] {
   const n = matrix.length;

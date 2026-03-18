@@ -23,6 +23,13 @@
     "annual": "Annual Rebalancing",
     "none": "No Rebalancing"
   },
+  "correlationMatrix": {
+    "title": "Correlation Matrix",
+    "description": "Measured correlation coefficients of monthly returns",
+    "source": "Source: Stooq monthly closing prices",
+    "period": "Period: SPY/^TPX/AGG/GLD = 2005-2024 (238 months), BTC = 2015-2024 (119 months)",
+    "note": "AGG & GLD ETFs launched in 2004, so data before 2005 is unavailable"
+  },
   "simulate": "Run Simulation",
   "simulating": "Calculating...",
   "results": {
@@ -33,6 +40,8 @@
     "median": "Median",
     "principal": "Total Principal",
     "upper10": "90th Percentile",
+    "upper25": "75th Percentile",
+    "lower25": "25th Percentile",
     "lower10": "10th Percentile",
     "principalLossProbability": "Principal Loss Rate (final value < total invested)",
     "year": "Year",

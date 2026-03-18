@@ -1,50 +1,52 @@
 # Asset Allocation Simulator
 
-FIRE計画向け資産アロケーションシミュレーター。モンテカルロ法で将来の資産推移を可視化する。
+Monte Carlo portfolio simulator for FIRE planning. Visualizes future asset growth with percentile band charts and histograms.
 
-## 技術スタック
+## Tech Stack
 
-- **Next.js 15 + TypeScript** — App Router、Vercelデプロイ前提
-- **Tailwind CSS v4** — スタイリング
-- **Recharts** — パーセンタイル帯チャート・ヒストグラム
-- **next-intl** — 日本語/英語対応（`/ja`, `/en`）
-- **Web Worker** — モンテカルロ計算をメインスレッド外で実行
+- **Next.js 15 + TypeScript** — App Router, deployed on Vercel
+- **Tailwind CSS v4** — styling
+- **Recharts** — percentile band chart and histogram
+- **next-intl** — Japanese/English i18n (`/ja`, `/en`)
+- **Web Worker** — Monte Carlo computation off the main thread
 
-## コマンド
+## Commands
 
 ```bash
-npm run dev     # 開発サーバー起動（localhost:3000）
-npm run build   # プロダクションビルド
-npm run lint    # ESLintチェック
+npm run dev     # Start dev server (localhost:3000)
+npm run build   # Production build
+npm run lint    # ESLint check
 ```
 
-## 重要なファイル
+## Key Files
 
-| ファイル | 役割 |
-|---------|------|
-| `src/lib/asset-data.ts` | 7資産クラスの年率リターン・標準偏差・相関行列（ハードコード） |
-| `src/lib/cholesky.ts` | コレスキー分解（相関付き乱数生成に使用） |
-| `src/lib/monte-carlo.ts` | シミュレーションロジック本体 |
-| `src/workers/monte-carlo.worker.ts` | Web Worker版（UIで実際に使用） |
-| `src/components/SimulationPanel.tsx` | 入力・出力を統合するメインコンポーネント |
-| `src/messages/ja.json`, `en.json` | 翻訳テキスト |
-| `src/types/index.ts` | 型定義 |
+| File | Role |
+|------|------|
+| `src/lib/asset-data.ts` | Hardcoded annual return, std dev, and correlation matrix for 6 asset classes |
+| `src/lib/cholesky.ts` | Cholesky decomposition (used for correlated random return generation) |
+| `src/lib/monte-carlo.ts` | Core simulation logic |
+| `src/workers/monte-carlo.worker.ts` | Web Worker version (used by the UI) |
+| `src/components/SimulationPanel.tsx` | Top-level component integrating inputs and results |
+| `src/messages/ja.json`, `en.json` | Translation strings |
+| `src/types/index.ts` | Type definitions |
 
-## 資産クラスとデータ
+## Asset Classes and Data
 
-7クラス: 現金・外国株・日本株・外国債券・日本国債・金・ビットコイン
+6 classes: Cash, Foreign Stocks, Japan Stocks, Bonds, Gold, Bitcoin.
 
-`src/lib/asset-data.ts` に年率リターン・標準偏差・7×7相関行列をハードコード。
-データを更新する際はこのファイルのみ変更すればよい。
+Annual return, std dev, and 6×6 correlation matrix are hardcoded in `src/lib/asset-data.ts`.
+Correlation values are measured from Stooq monthly closing prices (2005–2024 for most assets, 2015–2024 for BTC).
+To update the data, edit only this file.
 
-## シミュレーションアルゴリズム
+## Simulation Algorithm
 
-1. 年率パラメータ → 月率に変換（リターン÷12、標準偏差÷√12）
-2. 相関行列のコレスキー分解で相関付き乱数を生成（Box-Muller変換）
-3. 10,000パスを月次でシミュレーション
-4. 各月のパーセンタイル（5/25/50/75/95）と最終値分布を計算
+1. Convert annual parameters to monthly (return ÷ 12, std dev ÷ √12)
+2. Cholesky-decompose the correlation matrix to generate correlated random returns (Box-Muller transform)
+3. Run 10,000 paths month by month
+4. Compute per-month percentiles (p5/p25/p50/p75/p95) and final value distribution
 
 ## i18n
 
-`/ja`（デフォルト）と `/en` のルーティング。
-テキスト追加は `src/messages/ja.json` と `en.json` を同時に更新。
+Routes: `/ja` (default) and `/en`.
+When adding text, update both `src/messages/ja.json` and `en.json` together.
+English locale hides Japan Stocks (allocation merged into Foreign Stocks automatically).

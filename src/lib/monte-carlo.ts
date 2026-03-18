@@ -2,7 +2,7 @@ import { AssetClassId, SimulationParams, SimulationResult, MonthlyPercentiles } 
 import { ASSET_CLASSES, ASSET_CLASS_IDS, CORRELATION_MATRIX } from "./asset-data";
 import { choleskyDecomposition } from "./cholesky";
 
-/** Box-Muller変換で標準正規分布の乱数を生成 */
+/** Generate a standard normal random number via Box-Muller transform. */
 function randomNormal(): number {
   let u1 = 0;
   let u2 = 0;
@@ -11,7 +11,7 @@ function randomNormal(): number {
   return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
 }
 
-/** 配列のパーセンタイルを計算（ソート済み配列を受け取る） */
+/** Compute the p-th percentile of a pre-sorted array. */
 function percentile(sorted: number[], p: number): number {
   const idx = (p / 100) * (sorted.length - 1);
   const lower = Math.floor(idx);
@@ -25,14 +25,14 @@ export function runSimulation(params: SimulationParams): SimulationResult {
   const totalMonths = years * 12;
   const n = ASSET_CLASS_IDS.length;
 
-  // 年率→月率変換
+  // Convert annual parameters to monthly
   const monthlyReturns = ASSET_CLASS_IDS.map((id) => ASSET_CLASSES[id].annualReturn / 12);
   const monthlyStdDevs = ASSET_CLASS_IDS.map((id) => ASSET_CLASSES[id].annualStdDev / Math.sqrt(12));
 
-  // 配分比率（0-1）
+  // Allocation weights (0–1)
   const weights = ASSET_CLASS_IDS.map((id) => allocations[id] / 100);
 
-  // コレスキー分解
+  // Cholesky decomposition of the correlation matrix
   const L = choleskyDecomposition(CORRELATION_MATRIX);
 
   const monthlyTotals: Float64Array[] = Array.from({ length: totalMonths + 1 }, () => new Float64Array(numSimulations));
@@ -51,7 +51,7 @@ export function runSimulation(params: SimulationParams): SimulationResult {
       const z = new Float64Array(n);
       for (let i = 0; i < n; i++) z[i] = randomNormal();
 
-      // 相関付き乱数: x = L * z
+      // Correlated random returns: x = L * z
       const x = new Float64Array(n);
       for (let i = 0; i < n; i++) {
         let sum = 0;
@@ -59,18 +59,18 @@ export function runSimulation(params: SimulationParams): SimulationResult {
         x[i] = sum;
       }
 
-      // 各資産にリターンを適用（クランプなし）
+      // Apply returns to each asset (no clamping — negative values tracked for loss probability)
       for (let i = 0; i < n; i++) {
         const r = monthlyReturns[i] + monthlyStdDevs[i] * x[i];
         holdings[i] *= 1 + r;
       }
 
-      // 毎月の積立を配分比率で追加
+      // Add monthly contribution proportionally
       for (let i = 0; i < n; i++) {
         holdings[i] += monthlyAmount * weights[i];
       }
 
-      // 年次リバランス（12ヶ月ごと）
+      // Annual rebalancing (every 12 months)
       if (rebalance && month % 12 === 0) {
         total = 0;
         for (let i = 0; i < n; i++) total += holdings[i];
@@ -86,7 +86,7 @@ export function runSimulation(params: SimulationParams): SimulationResult {
     finalValues[sim] = total;
   }
 
-  // 各月のパーセンタイルを計算
+  // Compute per-month percentiles across all simulation paths
   const percentiles: MonthlyPercentiles[] = [];
   for (let month = 0; month <= totalMonths; month++) {
     const values = Array.from(monthlyTotals[month]).sort((a, b) => a - b);
@@ -113,6 +113,8 @@ export function runSimulation(params: SimulationParams): SimulationResult {
     medianFinal: percentile(sortedFinal, 50),
     principal,
     p10Final: percentile(sortedFinal, 10),
+    p25Final: percentile(sortedFinal, 25),
+    p75Final: percentile(sortedFinal, 75),
     p90Final: percentile(sortedFinal, 90),
     principalLossProbability: principalLossCount / numSimulations,
   };

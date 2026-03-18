@@ -23,6 +23,13 @@
     "annual": "年次リバランスあり",
     "none": "リバランスなし"
   },
+  "correlationMatrix": {
+    "title": "相関行列",
+    "description": "月次リターンの実測相関係数",
+    "source": "出典: Stooq月次終値",
+    "period": "期間: SPY/^TPX/AGG/GLD = 2005-2024（238ヶ月）、BTC = 2015-2024（119ヶ月）",
+    "note": "AGG・GLD のETF設立が2004年以降のため2000年からのデータは取得不可"
+  },
   "simulate": "シミュレーション実行",
   "simulating": "計算中...",
   "results": {
@@ -33,6 +40,8 @@
     "median": "中央値",
     "principal": "元本合計",
     "upper10": "上位10%",
+    "upper25": "上位25%",
+    "lower25": "下位25%",
     "lower10": "下位10%",
     "principalLossProbability": "元本割れ確率（最終資産額が元本を下回る）",
     "year": "年",

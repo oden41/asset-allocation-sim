@@ -30,7 +30,7 @@ export default function PercentileBandChart({ data }: Props) {
     .filter((d) => d.month % 12 === 0)
     .map((d) => ({
       year: d.month / 12,
-      // 対数スケール時は0以下を小さな正値に置換
+      // Clamp to 1 in log scale to avoid log(0)
       p5:  logScale ? Math.max(d.p5,  1) : d.p5,
       p25: logScale ? Math.max(d.p25, 1) : d.p25,
       p50: logScale ? Math.max(d.p50, 1) : d.p50,
@@ -70,13 +70,13 @@ export default function PercentileBandChart({ data }: Props) {
             formatter={(value) => [`${formatAmount(Number(value))} ${t("tenThousandYen")}`, ""]}
             labelFormatter={(label) => `${label}${t("year")}`}
           />
-          {/* 90%帯 (p5〜p95): 薄い色 */}
+          {/* 90% band (p5–p95): light fill */}
           <Area type="monotone" dataKey="p95" stroke="none" fill="#3b82f6" fillOpacity={0.15} isAnimationActive={false} />
           <Area type="monotone" dataKey="p5"  stroke="none" fill="white"  fillOpacity={1}    isAnimationActive={false} />
-          {/* 50%帯 (p25〜p75): 濃い色 */}
+          {/* 50% band (p25–p75): darker fill */}
           <Area type="monotone" dataKey="p75" stroke="none" fill="#3b82f6" fillOpacity={0.35} isAnimationActive={false} />
           <Area type="monotone" dataKey="p25" stroke="none" fill="white"  fillOpacity={1}    isAnimationActive={false} />
-          {/* 中央値 */}
+          {/* Median */}
           <Area type="monotone" dataKey="p50" stroke="#2563eb" strokeWidth={2} fill="none" isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>

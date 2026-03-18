@@ -33,13 +33,13 @@ export default function HistogramChart({ finalValues, median }: Props) {
   const sorted = [...positiveValues].sort((a, b) => a - b);
   const n = sorted.length;
 
-  // P1〜P99の範囲でビン作成
+  // Build bins over the P1–P99 range to clip extreme outliers
   const p1  = sorted[Math.max(0, Math.floor(0.01 * (n - 1)))];
   const p99 = sorted[Math.min(n - 1, Math.ceil(0.99 * (n - 1)))];
 
   const bins: { midpoint: number; count: number }[] = logScale
     ? (() => {
-        // 対数スペースで等幅ビン（log-normal分布に最適）
+        // Equal-width bins in log space (optimal for log-normal distributions)
         const logMin = Math.log(Math.max(p1, 1));
         const logMax = Math.log(Math.max(p99, 1));
         const logBinWidth = (logMax - logMin) / numBins || 0.1;
