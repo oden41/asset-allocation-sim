@@ -1,6 +1,8 @@
 # Asset Allocation Simulator
 
-Monte Carlo portfolio simulator for FIRE planning. Input your initial investment, monthly contribution, investment horizon, and asset allocation — the simulator runs 10,000 paths and visualizes the range of possible outcomes.
+Monte Carlo portfolio simulator. Input your initial investment, monthly contribution, investment horizon, and asset allocation — the simulator runs 10,000 paths and visualizes the range of possible outcomes.
+
+![screenshot](public/sample.png)
 
 ---
 
