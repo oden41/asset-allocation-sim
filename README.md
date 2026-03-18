@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Asset Allocation Simulator
+
+Monte Carlo portfolio simulator for FIRE planning. Input your initial investment, monthly contribution, investment horizon, and asset allocation — the simulator runs 10,000 paths and visualizes the range of possible outcomes.
+
+---
+
+## Features
+
+- **Monte Carlo simulation** — 10,000 paths with correlated multi-asset returns (Cholesky decomposition)
+- **Percentile band chart** — p5/p25/p50/p75/p95 over time (linear or log scale)
+- **Final value histogram** — distribution of outcomes at the end of the investment period
+- **Summary statistics** — median, 10th/25th/75th/90th percentile, principal loss probability
+- **Correlation matrix** — measured from real historical data (Stooq monthly closing prices)
+- **Annual rebalancing** toggle
+- **Japanese / English** bilingual (`/ja`, `/en`)
+- Runs entirely in the browser — Web Worker offloads computation from the main thread
+
+## Asset Classes
+
+| Asset | Proxy | Annual Return | Std Dev | Data Period |
+|-------|-------|--------------|---------|-------------|
+| Cash | — | 0.1% | 0.1% | — |
+| Foreign Stocks | SPY (S&P 500 ETF) | 8% | 18% | 2005–2024 |
+| Japan Stocks | ^TPX (TOPIX) | 6% | 19% | 2005–2024 |
+| Bonds | AGG (US Agg Bond ETF) | 2.5% | 5.5% | 2005–2024 |
+| Gold | GLD (Gold ETF) | 6% | 17% | 2005–2024 |
+| Bitcoin | BTC-USD | 30% | 70% | 2015–2024 |
+
+Correlation values are computed from Stooq monthly closing prices. All parameters are hardcoded in [`src/lib/asset-data.ts`](src/lib/asset-data.ts).
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Commands
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev      # Dev server
+npm run build    # Production build
+npm run lint     # ESLint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech Stack
 
-## Learn More
+- **Next.js 15** (App Router) + **TypeScript**
+- **Tailwind CSS v4**
+- **Recharts** — charts
+- **next-intl** — i18n (`/ja` default, `/en`)
+- **Web Worker** — Monte Carlo simulation off the main thread
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/[locale]/              # Routes (/ja, /en)
+├── components/                # UI components
+├── lib/
+│   ├── asset-data.ts          # Return, std dev, correlation matrix — edit here to update data
+│   ├── cholesky.ts            # Cholesky decomposition
+│   └── monte-carlo.ts         # Core simulation logic
+├── workers/
+│   └── monte-carlo.worker.ts  # Web Worker entry point
+├── messages/
+│   ├── ja.json                # Japanese strings
+│   └── en.json                # English strings
+└── types/index.ts
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+vercel deploy
+```
