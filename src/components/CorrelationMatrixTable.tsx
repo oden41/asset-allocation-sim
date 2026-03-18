@@ -1,9 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { ASSET_CLASS_IDS, CORRELATION_MATRIX } from "@/lib/asset-data";
+import { AssetClassId } from "@/types";
 
-// ラベルはallocation翻訳キーを流用
 const ASSET_KEYS: Record<string, string> = {
   cash:         "cash",
   foreignStock: "foreignStock",
@@ -12,6 +12,8 @@ const ASSET_KEYS: Record<string, string> = {
   gold:         "gold",
   bitcoin:      "bitcoin",
 };
+
+const EN_HIDDEN: AssetClassId[] = ["japanStock"];
 
 function cellColor(value: number): string {
   if (value === 1) return "bg-gray-100 dark:bg-gray-700 font-bold";
@@ -25,8 +27,13 @@ function cellColor(value: number): string {
 export default function CorrelationMatrixTable() {
   const t = useTranslations("correlationMatrix");
   const tAlloc = useTranslations("allocation");
+  const locale = useLocale();
 
-  const labels = ASSET_CLASS_IDS.map((id) => tAlloc(ASSET_KEYS[id]));
+  const visibleIds = locale === "en"
+    ? ASSET_CLASS_IDS.filter((id) => !EN_HIDDEN.includes(id))
+    : ASSET_CLASS_IDS;
+  const visibleIndices = visibleIds.map((id) => ASSET_CLASS_IDS.indexOf(id));
+  const labels = visibleIds.map((id) => tAlloc(ASSET_KEYS[id]));
 
   return (
     <div className="space-y-3">
@@ -48,24 +55,27 @@ export default function CorrelationMatrixTable() {
             </tr>
           </thead>
           <tbody>
-            {ASSET_CLASS_IDS.map((rowId, i) => (
-              <tr key={rowId}>
-                <td className="p-1.5 font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap pr-3">
-                  {labels[i]}
-                </td>
-                {ASSET_CLASS_IDS.map((_, j) => {
-                  const v = CORRELATION_MATRIX[i][j];
-                  return (
-                    <td
-                      key={j}
-                      className={`p-1.5 text-center rounded ${cellColor(v)}`}
-                    >
-                      {v === 1 ? "—" : v.toFixed(3)}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+            {visibleIds.map((rowId, li) => {
+              const i = visibleIndices[li];
+              return (
+                <tr key={rowId}>
+                  <td className="p-1.5 font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap pr-3">
+                    {labels[li]}
+                  </td>
+                  {visibleIndices.map((j) => {
+                    const v = CORRELATION_MATRIX[i][j];
+                    return (
+                      <td
+                        key={j}
+                        className={`p-1.5 text-center rounded ${cellColor(v)}`}
+                      >
+                        {v === 1 ? "—" : v.toFixed(3)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

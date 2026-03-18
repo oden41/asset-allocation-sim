@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { MonthlyPercentiles } from "@/types";
 import {
   AreaChart,
@@ -17,13 +17,22 @@ interface Props {
   data: MonthlyPercentiles[];
 }
 
-function formatAmount(value: number): string {
+function formatAmountJa(value: number): string {
   if (value >= 10000) return `${(value / 10000).toFixed(1)}億`;
+  return `${Math.round(value)}`;
+}
+
+function formatAmountEn(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1000000) return `${(value / 1000000).toFixed(1)}B`;
+  if (abs >= 1000) return `${(value / 1000).toFixed(1)}M`;
   return `${Math.round(value)}`;
 }
 
 export default function PercentileBandChart({ data }: Props) {
   const t = useTranslations("results");
+  const locale = useLocale();
+  const formatAmount = locale === "en" ? formatAmountEn : formatAmountJa;
   const [logScale, setLogScale] = useState(false);
 
   const chartData = data
