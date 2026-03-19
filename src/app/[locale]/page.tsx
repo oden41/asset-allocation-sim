@@ -6,7 +6,7 @@ export default function HomePage() {
   const t = useTranslations();
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen flex flex-col">
       <header className="border-b border-gray-200 dark:border-gray-800">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div>
@@ -17,6 +17,13 @@ export default function HomePage() {
         </div>
       </header>
       <SimulationPanel />
+      <footer className="mt-auto border-t border-gray-200 dark:border-gray-700">
+        <div className="mx-auto max-w-6xl px-4 py-6">
+          <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+            {t("disclaimer")}
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }

@@ -76,3 +76,7 @@ src/
 ```bash
 vercel deploy
 ```
+
+## Disclaimer
+
+This tool is for informational and educational purposes only. It does not constitute financial advice. All simulation results are hypothetical and based on historical data, which is not a guarantee of future performance. The creator of this tool assumes no responsibility for any financial losses or damages arising from the use of this tool. Always consult a qualified financial advisor before making investment decisions.
