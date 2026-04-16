@@ -91,7 +91,7 @@ export default function AllocationSliders({ allocations, visibleIds, onChange }:
   // Sync selectedPreset when allocations change externally
   useEffect(() => {
     setSelectedPreset(matchPreset(allocations, locale));
-  }, [allocations]);
+  }, [allocations, locale]);
 
   const handleChange = (id: AssetClassId, value: number) => {
     onChange({ ...allocations, [id]: value });
@@ -99,7 +99,7 @@ export default function AllocationSliders({ allocations, visibleIds, onChange }:
 
   const handlePresetChange = (presetId: string) => {
     const preset = PRESET_PORTFOLIOS.find((p) => p.id === presetId);
-    if (!preset) return;
+    if (!preset) { setSelectedPreset("custom"); return; }
 
     let next = { ...preset.allocations };
 
