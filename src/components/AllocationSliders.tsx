@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { AssetClassId } from "@/types";
-import { ASSET_CLASS_IDS } from "@/lib/asset-data";
+import { ASSET_CLASS_IDS, PRESET_PORTFOLIOS } from "@/lib/asset-data";
 
 interface Props {
   allocations: Record<AssetClassId, number>;
@@ -54,15 +54,66 @@ function AllocationInput({
   );
 }
 
+/** Check if current allocations match a preset (comparing all asset class values) */
+function matchPreset(allocations: Record<AssetClassId, number>, locale: string): string {
+  for (const preset of PRESET_PORTFOLIOS) {
+    // In English locale, normalize both sides: merge japanStock into foreignStock
+    if (locale === "en") {
+      const normCurrent = allocations.foreignStock + allocations.japanStock;
+      const normPreset = preset.allocations.foreignStock + preset.allocations.japanStock;
+      const match =
+        normCurrent === normPreset &&
+        ASSET_CLASS_IDS.every(
+          (id) =>
+            id === "foreignStock" || id === "japanStock" || allocations[id] === preset.allocations[id]
+        );
+      if (match) return preset.id;
+    } else {
+      const match = ASSET_CLASS_IDS.every(
+        (id) => allocations[id] === preset.allocations[id]
+      );
+      if (match) return preset.id;
+    }
+  }
+  return "custom";
+}
+
 export default function AllocationSliders({ allocations, visibleIds, onChange }: Props) {
   const t = useTranslations("allocation");
+  const locale = useLocale();
+
+  const [selectedPreset, setSelectedPreset] = useState(() => matchPreset(allocations, locale));
 
   const displayIds = visibleIds ?? ASSET_CLASS_IDS;
   const total = ASSET_CLASS_IDS.reduce((sum, id) => sum + allocations[id], 0);
   const isValid = total === 100;
 
+  // Sync selectedPreset when allocations change externally
+  useEffect(() => {
+    setSelectedPreset(matchPreset(allocations, locale));
+  }, [allocations, locale]);
+
   const handleChange = (id: AssetClassId, value: number) => {
     onChange({ ...allocations, [id]: value });
+  };
+
+  const handlePresetChange = (presetId: string) => {
+    const preset = PRESET_PORTFOLIOS.find((p) => p.id === presetId);
+    if (!preset) { setSelectedPreset("custom"); return; }
+
+    let next = { ...preset.allocations };
+
+    // In English locale, merge japanStock into foreignStock
+    if (locale === "en" && next.japanStock > 0) {
+      next = {
+        ...next,
+        foreignStock: next.foreignStock + next.japanStock,
+        japanStock: 0,
+      };
+    }
+
+    setSelectedPreset(presetId);
+    onChange(next);
   };
 
   return (
@@ -72,6 +123,26 @@ export default function AllocationSliders({ allocations, visibleIds, onChange }:
         <span className={`text-sm font-mono ${isValid ? "text-green-600" : "text-red-500 font-bold"}`}>
           {t("total")}: {total}%
         </span>
+      </div>
+
+      {/* プリセット選択 */}
+      <div className="flex items-center gap-2">
+        <label htmlFor="preset-select" className="text-sm font-medium shrink-0">
+          {t("preset.label")}:
+        </label>
+        <select
+          id="preset-select"
+          value={selectedPreset}
+          onChange={(e) => handlePresetChange(e.target.value)}
+          className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800"
+        >
+          <option value="custom">{t("preset.custom")}</option>
+          {PRESET_PORTFOLIOS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {t(`preset.${p.id}`)}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* 配分バー */}
