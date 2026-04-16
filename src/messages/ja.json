@@ -16,7 +16,17 @@
     "japanStock": "日本株",
     "bond": "債券",
     "gold": "金",
-    "bitcoin": "ビットコイン"
+    "bitcoin": "ビットコイン",
+    "preset": {
+      "label": "プリセット",
+      "custom": "カスタム",
+      "default": "デフォルト",
+      "allStock": "全株式",
+      "sixtyForty": "60/40（株式/債券）",
+      "gpif": "GPIF型",
+      "allWeather": "オールウェザー",
+      "conservative": "保守的"
+    }
   },
   "rebalance": {
     "title": "リバランス",

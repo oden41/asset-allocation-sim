@@ -52,3 +52,35 @@ export const DEFAULT_ALLOCATIONS: Record<AssetClassId, number> = {
   gold:         10,
   bitcoin:      5,
 };
+
+export interface PresetPortfolio {
+  id: string;
+  allocations: Record<AssetClassId, number>;
+}
+
+export const PRESET_PORTFOLIOS: PresetPortfolio[] = [
+  {
+    id: "default",
+    allocations: { cash: 25, foreignStock: 30, japanStock: 20, bond: 10, gold: 10, bitcoin: 5 },
+  },
+  {
+    id: "allStock",
+    allocations: { cash: 0, foreignStock: 50, japanStock: 50, bond: 0, gold: 0, bitcoin: 0 },
+  },
+  {
+    id: "sixtyForty",
+    allocations: { cash: 0, foreignStock: 35, japanStock: 25, bond: 40, gold: 0, bitcoin: 0 },
+  },
+  {
+    id: "gpif",
+    allocations: { cash: 0, foreignStock: 25, japanStock: 25, bond: 50, gold: 0, bitcoin: 0 },
+  },
+  {
+    id: "allWeather",
+    allocations: { cash: 0, foreignStock: 30, japanStock: 0, bond: 40, gold: 15, bitcoin: 0 },
+  },
+  {
+    id: "conservative",
+    allocations: { cash: 30, foreignStock: 20, japanStock: 10, bond: 30, gold: 10, bitcoin: 0 },
+  },
+];

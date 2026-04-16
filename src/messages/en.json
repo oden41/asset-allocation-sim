@@ -16,7 +16,17 @@
     "japanStock": "Japan Stocks",
     "bond": "Bonds",
     "gold": "Gold",
-    "bitcoin": "Bitcoin"
+    "bitcoin": "Bitcoin",
+    "preset": {
+      "label": "Preset",
+      "custom": "Custom",
+      "default": "Default",
+      "allStock": "All Stocks",
+      "sixtyForty": "60/40 (Stocks/Bonds)",
+      "gpif": "GPIF",
+      "allWeather": "All Weather",
+      "conservative": "Conservative"
+    }
   },
   "rebalance": {
     "title": "Rebalancing",
