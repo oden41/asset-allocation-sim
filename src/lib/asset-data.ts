@@ -77,7 +77,7 @@ export const PRESET_PORTFOLIOS: PresetPortfolio[] = [
   },
   {
     id: "allWeather",
-    allocations: { cash: 0, foreignStock: 30, japanStock: 0, bond: 40, gold: 15, bitcoin: 0 },
+    allocations: { cash: 0, foreignStock: 30, japanStock: 0, bond: 55, gold: 15, bitcoin: 0 },
   },
   {
     id: "conservative",

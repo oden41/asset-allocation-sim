@@ -55,12 +55,25 @@ function AllocationInput({
 }
 
 /** Check if current allocations match a preset (comparing all asset class values) */
-function matchPreset(allocations: Record<AssetClassId, number>): string {
+function matchPreset(allocations: Record<AssetClassId, number>, locale: string): string {
   for (const preset of PRESET_PORTFOLIOS) {
-    const match = ASSET_CLASS_IDS.every(
-      (id) => allocations[id] === preset.allocations[id]
-    );
-    if (match) return preset.id;
+    // In English locale, normalize both sides: merge japanStock into foreignStock
+    if (locale === "en") {
+      const normCurrent = allocations.foreignStock + allocations.japanStock;
+      const normPreset = preset.allocations.foreignStock + preset.allocations.japanStock;
+      const match =
+        normCurrent === normPreset &&
+        ASSET_CLASS_IDS.every(
+          (id) =>
+            id === "foreignStock" || id === "japanStock" || allocations[id] === preset.allocations[id]
+        );
+      if (match) return preset.id;
+    } else {
+      const match = ASSET_CLASS_IDS.every(
+        (id) => allocations[id] === preset.allocations[id]
+      );
+      if (match) return preset.id;
+    }
   }
   return "custom";
 }
@@ -69,7 +82,7 @@ export default function AllocationSliders({ allocations, visibleIds, onChange }:
   const t = useTranslations("allocation");
   const locale = useLocale();
 
-  const [selectedPreset, setSelectedPreset] = useState(() => matchPreset(allocations));
+  const [selectedPreset, setSelectedPreset] = useState(() => matchPreset(allocations, locale));
 
   const displayIds = visibleIds ?? ASSET_CLASS_IDS;
   const total = ASSET_CLASS_IDS.reduce((sum, id) => sum + allocations[id], 0);
@@ -77,7 +90,7 @@ export default function AllocationSliders({ allocations, visibleIds, onChange }:
 
   // Sync selectedPreset when allocations change externally
   useEffect(() => {
-    setSelectedPreset(matchPreset(allocations));
+    setSelectedPreset(matchPreset(allocations, locale));
   }, [allocations]);
 
   const handleChange = (id: AssetClassId, value: number) => {
