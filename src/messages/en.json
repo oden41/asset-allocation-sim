@@ -6,7 +6,11 @@
     "initialAmount": "Initial Investment (K$)",
     "monthlyAmount": "Monthly Contribution (K$)",
     "years": "Investment Period (Years)",
-    "yearsUnit": "yrs"
+    "yearsUnit": "yrs",
+    "withdrawalTitle": "Withdrawal Settings",
+    "withdrawalYears": "Withdrawal Duration",
+    "withdrawalMonthlyAmount": "Monthly Withdrawal (K$)",
+    "withdrawalNone": "None"
   },
   "allocation": {
     "title": "Asset Allocation",
@@ -55,6 +59,8 @@
     "lower25": "25th Percentile",
     "lower10": "10th Percentile",
     "principalLossProbability": "Principal Loss Rate (final value < total invested)",
+    "depletionProbability": "Depletion Probability (portfolio reaches zero)",
+    "withdrawalStart": "Withdrawal Start",
     "year": "Year",
     "tenThousandYen": "K$",
     "frequency": "Frequency",

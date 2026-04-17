@@ -11,10 +11,12 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 
 interface Props {
   data: MonthlyPercentiles[];
+  withdrawalStartYear?: number;
 }
 
 function formatAmountJa(value: number): string {
@@ -29,7 +31,7 @@ function formatAmountEn(value: number): string {
   return `${Math.round(value)}`;
 }
 
-export default function PercentileBandChart({ data }: Props) {
+export default function PercentileBandChart({ data, withdrawalStartYear }: Props) {
   const t = useTranslations("results");
   const locale = useLocale();
   const formatAmount = locale === "en" ? formatAmountEn : formatAmountJa;
@@ -63,7 +65,7 @@ export default function PercentileBandChart({ data }: Props) {
         </button>
       </div>
       <ResponsiveContainer width="100%" height={350}>
-        <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 20 }}>
+        <AreaChart data={chartData} margin={{ top: 24, right: 20, left: 20, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
           <XAxis
             dataKey="year"
@@ -87,6 +89,20 @@ export default function PercentileBandChart({ data }: Props) {
           <Area type="monotone" dataKey="p25" stroke="none" fill="white"  fillOpacity={1}    isAnimationActive={false} />
           {/* Median */}
           <Area type="monotone" dataKey="p50" stroke="#2563eb" strokeWidth={2} fill="none" isAnimationActive={false} />
+          {withdrawalStartYear && withdrawalStartYear > 0 ? (
+            <ReferenceLine
+              x={withdrawalStartYear}
+              stroke="#ef4444"
+              strokeDasharray="5 5"
+              strokeWidth={1.5}
+              label={{
+                value: t("withdrawalStart"),
+                position: "top",
+                fill: "#ef4444",
+                fontSize: 12,
+              }}
+            />
+          ) : null}
         </AreaChart>
       </ResponsiveContainer>
     </div>

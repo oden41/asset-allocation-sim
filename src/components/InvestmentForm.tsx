@@ -10,6 +10,10 @@ interface Props {
   onInitialChange: (v: number) => void;
   onMonthlyChange: (v: number) => void;
   onYearsChange: (v: number) => void;
+  withdrawalYears: number;
+  withdrawalMonthlyAmount: number;
+  onWithdrawalYearsChange: (v: number) => void;
+  onWithdrawalMonthlyAmountChange: (v: number) => void;
 }
 
 function useNumberInput(value: number, onChange: (v: number) => void) {
@@ -42,10 +46,16 @@ export default function InvestmentForm({
   onInitialChange,
   onMonthlyChange,
   onYearsChange,
+  withdrawalYears,
+  withdrawalMonthlyAmount,
+  onWithdrawalYearsChange,
+  onWithdrawalMonthlyAmountChange,
 }: Props) {
+  const WITHDRAWAL_MAX_YEARS = 40;
   const t = useTranslations("investment");
   const initialProps = useNumberInput(initialAmount, onInitialChange);
   const monthlyProps = useNumberInput(monthlyAmount, onMonthlyChange);
+  const withdrawalMonthlyProps = useNumberInput(withdrawalMonthlyAmount, onWithdrawalMonthlyAmountChange);
 
   return (
     <div className="space-y-4">
@@ -88,6 +98,42 @@ export default function InvestmentForm({
           <span>25</span>
           <span>50</span>
         </div>
+      </div>
+
+      {/* Withdrawal settings */}
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-semibold mb-3">{t("withdrawalTitle")}</h3>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            {t("withdrawalYears")}: {withdrawalYears === 0 ? t("withdrawalNone") : `${withdrawalYears}${t("yearsUnit")}`}
+          </label>
+          <input
+            type="range"
+            min={0}
+            max={WITHDRAWAL_MAX_YEARS}
+            value={withdrawalYears}
+            onChange={(e) => onWithdrawalYearsChange(Number(e.target.value))}
+            className="w-full"
+          />
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>{t("withdrawalNone")}</span>
+            <span>{WITHDRAWAL_MAX_YEARS / 2}</span>
+            <span>{WITHDRAWAL_MAX_YEARS}</span>
+          </div>
+        </div>
+
+        {withdrawalYears > 0 && (
+          <div className="mt-3">
+            <label className="block text-sm font-medium mb-1">{t("withdrawalMonthlyAmount")}</label>
+            <input
+              type="number"
+              min={0}
+              {...withdrawalMonthlyProps}
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

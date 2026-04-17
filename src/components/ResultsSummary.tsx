@@ -45,6 +45,16 @@ export default function ResultsSummary({ result }: Props) {
           {(result.principalLossProbability * 100).toFixed(1)}%
         </span>
       </div>
+
+      {/* 資産枯渇確率（取り崩しモード時のみ） */}
+      {result.withdrawalStartYear > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400">{t("depletionProbability")}</span>
+          <span className={`text-lg font-bold ${result.depletionProbability > 0.3 ? "text-red-500" : result.depletionProbability > 0.1 ? "text-yellow-500" : "text-green-600"}`}>
+            {(result.depletionProbability * 100).toFixed(1)}%
+          </span>
+        </div>
+      )}
     </div>
   );
 }

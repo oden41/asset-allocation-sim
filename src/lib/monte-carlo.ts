@@ -21,9 +21,12 @@ function percentile(sorted: number[], p: number): number {
 }
 
 export function runSimulation(params: SimulationParams): SimulationResult {
-  const { initialAmount, monthlyAmount, years, allocations, rebalance, numSimulations } = params;
-  const totalMonths = years * 12;
+  const { initialAmount, monthlyAmount, years, allocations, rebalance, numSimulations, withdrawalYears, withdrawalMonthlyAmount } = params;
+  // Simulation covers the accumulation phase (years) + the withdrawal phase (withdrawalYears).
+  const totalMonths = (years + (withdrawalYears > 0 ? withdrawalYears : 0)) * 12;
   const n = ASSET_CLASS_IDS.length;
+  // Withdrawal begins once the accumulation phase ends. Infinity disables withdrawal entirely.
+  const withdrawalStartMonth = withdrawalYears > 0 ? years * 12 : Infinity;
 
   // Convert annual parameters to monthly
   const monthlyReturns = ASSET_CLASS_IDS.map((id) => ASSET_CLASSES[id].annualReturn / 12);
@@ -37,7 +40,9 @@ export function runSimulation(params: SimulationParams): SimulationResult {
 
   const monthlyTotals: Float64Array[] = Array.from({ length: totalMonths + 1 }, () => new Float64Array(numSimulations));
   const finalValues = new Float64Array(numSimulations);
+  const withdrawnPerSim = new Float64Array(numSimulations);
   let principalLossCount = 0;
+  let depletionCount = 0;
 
   for (let sim = 0; sim < numSimulations; sim++) {
     const holdings = new Float64Array(n);
@@ -46,6 +51,7 @@ export function runSimulation(params: SimulationParams): SimulationResult {
     }
 
     let total = initialAmount;
+    let depleted = false;
     monthlyTotals[0][sim] = total;
     for (let month = 1; month <= totalMonths; month++) {
       const z = new Float64Array(n);
@@ -65,9 +71,23 @@ export function runSimulation(params: SimulationParams): SimulationResult {
         holdings[i] *= 1 + r;
       }
 
-      // Add monthly contribution proportionally
-      for (let i = 0; i < n; i++) {
-        holdings[i] += monthlyAmount * weights[i];
+      if (month <= withdrawalStartMonth) {
+        // Accumulation phase — add monthly contribution proportionally
+        for (let i = 0; i < n; i++) {
+          holdings[i] += monthlyAmount * weights[i];
+        }
+      } else {
+        // Withdrawal phase — draw proportionally to current holdings, capped at the
+        // remaining balance so the portfolio can hit exactly 0 instead of going negative.
+        total = 0;
+        for (let i = 0; i < n; i++) total += holdings[i];
+        if (total > 0) {
+          const actualWithdrawal = Math.min(withdrawalMonthlyAmount, total);
+          for (let i = 0; i < n; i++) {
+            holdings[i] -= actualWithdrawal * (holdings[i] / total);
+          }
+          withdrawnPerSim[sim] += actualWithdrawal;
+        }
       }
 
       // Annual rebalancing (every 12 months)
@@ -79,6 +99,19 @@ export function runSimulation(params: SimulationParams): SimulationResult {
 
       total = 0;
       for (let i = 0; i < n; i++) total += holdings[i];
+
+      // Only clamp to 0 during the withdrawal phase. During accumulation we
+      // preserve negative values so principal-loss probability tracking stays
+      // consistent with the "no clamping" invariant in CLAUDE.md.
+      if (total <= 0 && month > withdrawalStartMonth) {
+        for (let i = 0; i < n; i++) holdings[i] = 0;
+        total = 0;
+        if (!depleted) {
+          depletionCount++;
+          depleted = true;
+        }
+      }
+
       monthlyTotals[month][sim] = total;
 
     }
@@ -101,10 +134,13 @@ export function runSimulation(params: SimulationParams): SimulationResult {
   }
 
   const sortedFinal = Array.from(finalValues).sort((a, b) => a - b);
-  const principal = initialAmount + monthlyAmount * totalMonths;
+  // Principal = total capital contributed during the accumulation phase (always >= 0).
+  const principal = initialAmount + monthlyAmount * years * 12;
 
+  // Principal loss = the path's received value (final balance + cumulative withdrawals)
+  // is less than what was contributed.
   for (let sim = 0; sim < numSimulations; sim++) {
-    if (finalValues[sim] < principal) principalLossCount++;
+    if (finalValues[sim] + withdrawnPerSim[sim] < principal) principalLossCount++;
   }
 
   return {
@@ -117,5 +153,7 @@ export function runSimulation(params: SimulationParams): SimulationResult {
     p75Final: percentile(sortedFinal, 75),
     p90Final: percentile(sortedFinal, 90),
     principalLossProbability: principalLossCount / numSimulations,
+    depletionProbability: depletionCount / numSimulations,
+    withdrawalStartYear: withdrawalYears > 0 ? years : 0,
   };
 }

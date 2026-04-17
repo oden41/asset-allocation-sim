@@ -26,6 +26,8 @@ export default function SimulationPanel() {
   const [years, setYears] = useState(20);
   const [allocations, setAllocations] = useState<Record<AssetClassId, number>>(DEFAULT_ALLOCATIONS);
   const [rebalance, setRebalance] = useState(true);
+  const [withdrawalYears, setWithdrawalYears] = useState(0);
+  const [withdrawalMonthlyAmount, setWithdrawalMonthlyAmount] = useState(locale === "en" ? 2 : 20);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const workerRef = useRef<Worker | null>(null);
@@ -80,10 +82,12 @@ export default function SimulationPanel() {
       allocations,
       rebalance,
       numSimulations: NUM_SIMULATIONS,
+      withdrawalYears,
+      withdrawalMonthlyAmount,
     };
 
     worker.postMessage(params);
-  }, [initialAmount, monthlyAmount, years, allocations, rebalance, isValid, isRunning]);
+  }, [initialAmount, monthlyAmount, years, allocations, rebalance, isValid, isRunning, withdrawalYears, withdrawalMonthlyAmount]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -97,6 +101,10 @@ export default function SimulationPanel() {
             onInitialChange={setInitialAmount}
             onMonthlyChange={setMonthlyAmount}
             onYearsChange={setYears}
+            withdrawalYears={withdrawalYears}
+            withdrawalMonthlyAmount={withdrawalMonthlyAmount}
+            onWithdrawalYearsChange={setWithdrawalYears}
+            onWithdrawalMonthlyAmountChange={setWithdrawalMonthlyAmount}
           />
 
           <AllocationSliders
@@ -125,7 +133,7 @@ export default function SimulationPanel() {
           {result ? (
             <>
               <ResultsSummary result={result} />
-              <PercentileBandChart data={result.percentiles} />
+              <PercentileBandChart data={result.percentiles} withdrawalStartYear={result.withdrawalStartYear} />
               <HistogramChart finalValues={result.finalValues} median={result.medianFinal} />
             </>
           ) : (
