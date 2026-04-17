@@ -33,6 +33,7 @@ function runSimulation(params: SimulationParams): SimulationResult {
 
   const monthlyTotals: Float64Array[] = Array.from({ length: totalMonths + 1 }, () => new Float64Array(numSimulations));
   const finalValues = new Float64Array(numSimulations);
+  const withdrawnPerSim = new Float64Array(numSimulations);
   let principalLossCount = 0;
   let depletionCount = 0;
 
@@ -68,13 +69,16 @@ function runSimulation(params: SimulationParams): SimulationResult {
           holdings[i] += monthlyAmount * weights[i];
         }
       } else {
-        // Withdrawal phase — draw from each asset proportional to current holdings
+        // Withdrawal phase — draw proportionally to current holdings, capped at the
+        // remaining balance so the portfolio can hit exactly 0 instead of going negative.
         total = 0;
         for (let i = 0; i < n; i++) total += holdings[i];
         if (total > 0) {
+          const actualWithdrawal = Math.min(withdrawalMonthlyAmount, total);
           for (let i = 0; i < n; i++) {
-            holdings[i] -= withdrawalMonthlyAmount * (holdings[i] / total);
+            holdings[i] -= actualWithdrawal * (holdings[i] / total);
           }
+          withdrawnPerSim[sim] += actualWithdrawal;
         }
       }
 
@@ -120,12 +124,13 @@ function runSimulation(params: SimulationParams): SimulationResult {
   }
 
   const sortedFinal = Array.from(finalValues).sort((a, b) => a - b);
-  const contributionMonths = years * 12;
-  const withdrawalMonths = withdrawalYears > 0 ? withdrawalYears * 12 : 0;
-  const principal = initialAmount + monthlyAmount * contributionMonths - withdrawalMonthlyAmount * withdrawalMonths;
+  // Principal = total capital contributed during the accumulation phase (always >= 0).
+  const principal = initialAmount + monthlyAmount * years * 12;
 
+  // Principal loss = the path's received value (final balance + cumulative withdrawals)
+  // is less than what was contributed.
   for (let sim = 0; sim < numSimulations; sim++) {
-    if (finalValues[sim] < principal) principalLossCount++;
+    if (finalValues[sim] + withdrawnPerSim[sim] < principal) principalLossCount++;
   }
 
   return {

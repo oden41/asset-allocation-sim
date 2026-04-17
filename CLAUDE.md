@@ -62,14 +62,36 @@ BTC correlations are computed over the overlapping period with each counterpart.
 
 ## Simulation Algorithm
 
+The simulation runs for `(years + withdrawalYears) * 12` months. Months `1..years*12`
+are the **accumulation phase**; the remaining months (when `withdrawalYears > 0`) are
+the **withdrawal phase** that begins immediately after accumulation ends.
+
 1. Convert annual parameters to monthly (return ÷ 12, std dev ÷ √12)
 2. Cholesky-decompose the correlation matrix (`L` such that `corr = L Lᵀ`)
 3. Each month: draw `z ~ N(0,1)ⁿ`, compute correlated returns `r = μ + σ ⊙ (L z)`
-4. Apply returns to holdings; add monthly contribution proportionally
-5. Rebalance annually if enabled
-6. After 10,000 paths: compute per-month percentiles (p5/p25/p50/p75/p95) and final value distribution
+4. Apply returns to holdings
+5. Accumulation phase: add monthly contribution proportionally to target weights.
+   Withdrawal phase: draw `min(withdrawalMonthlyAmount, total)` proportionally to
+   current holdings (capped so the portfolio lands on 0 rather than going negative)
+   and accumulate the actual withdrawn amount into `withdrawnPerSim[sim]`.
+6. Rebalance annually if enabled
+7. **Withdrawal phase only:** if total ≤ 0 after the month's updates, clamp holdings
+   to 0 and mark the path as depleted (increments `depletionProbability`).
+8. After 10,000 paths: compute per-month percentiles (p5/p25/p50/p75/p95) and final value distribution
 
-Negative portfolio values are preserved (not clamped) to accurately track principal loss probability.
+During the **accumulation phase**, negative portfolio values are preserved (not
+clamped) to accurately track principal loss probability. Clamping to zero only
+occurs during the withdrawal phase once a portfolio is fully drawn down.
+
+### Principal and loss metrics
+
+- `principal = initialAmount + monthlyAmount * years * 12` — total capital contributed
+  during accumulation. Never negative, withdrawal amounts are **not** subtracted.
+- `principalLossProbability` = fraction of paths where
+  `finalValue + withdrawnPerSim[sim] < principal` (the user received back less than
+  they contributed, counting both the remaining balance and cumulative withdrawals).
+- `depletionProbability` = fraction of paths whose portfolio hit zero during the
+  withdrawal phase. Only shown in the UI when `withdrawalYears > 0`.
 
 ## i18n
 
