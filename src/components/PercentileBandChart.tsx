@@ -65,7 +65,7 @@ export default function PercentileBandChart({ data, withdrawalStartYear }: Props
         </button>
       </div>
       <ResponsiveContainer width="100%" height={350}>
-        <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 20 }}>
+        <AreaChart data={chartData} margin={{ top: 24, right: 20, left: 20, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
           <XAxis
             dataKey="year"
