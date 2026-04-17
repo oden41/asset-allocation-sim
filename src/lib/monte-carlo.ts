@@ -94,7 +94,10 @@ export function runSimulation(params: SimulationParams): SimulationResult {
       total = 0;
       for (let i = 0; i < n; i++) total += holdings[i];
 
-      if (total <= 0) {
+      // Only clamp to 0 during the withdrawal phase. During accumulation we
+      // preserve negative values so principal-loss probability tracking stays
+      // consistent with the "no clamping" invariant in CLAUDE.md.
+      if (total <= 0 && month > withdrawalStartMonth) {
         for (let i = 0; i < n; i++) holdings[i] = 0;
         total = 0;
         if (!depleted) {
