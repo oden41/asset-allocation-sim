@@ -19,9 +19,10 @@ function percentile(sorted: number[], p: number): number {
 }
 
 function runSimulation(params: SimulationParams): SimulationResult {
-  const { initialAmount, monthlyAmount, years, allocations, rebalance, numSimulations } = params;
+  const { initialAmount, monthlyAmount, years, allocations, rebalance, numSimulations, withdrawalStartYear, withdrawalMonthlyAmount } = params;
   const totalMonths = years * 12;
   const n = ASSET_CLASS_IDS.length;
+  const withdrawalStartMonth = withdrawalStartYear > 0 ? withdrawalStartYear * 12 : Infinity;
 
   const monthlyReturns = ASSET_CLASS_IDS.map((id) => ASSET_CLASSES[id].annualReturn / 12);
   const monthlyStdDevs = ASSET_CLASS_IDS.map((id) => ASSET_CLASSES[id].annualStdDev / Math.sqrt(12));
@@ -31,6 +32,7 @@ function runSimulation(params: SimulationParams): SimulationResult {
   const monthlyTotals: Float64Array[] = Array.from({ length: totalMonths + 1 }, () => new Float64Array(numSimulations));
   const finalValues = new Float64Array(numSimulations);
   let principalLossCount = 0;
+  let depletionCount = 0;
 
   for (let sim = 0; sim < numSimulations; sim++) {
     const holdings = new Float64Array(n);
@@ -39,6 +41,7 @@ function runSimulation(params: SimulationParams): SimulationResult {
     }
 
     let total = initialAmount;
+    let depleted = false;
     monthlyTotals[0][sim] = total;
     for (let month = 1; month <= totalMonths; month++) {
       const z = new Float64Array(n);
@@ -57,8 +60,20 @@ function runSimulation(params: SimulationParams): SimulationResult {
         holdings[i] *= 1 + r;
       }
 
-      for (let i = 0; i < n; i++) {
-        holdings[i] += monthlyAmount * weights[i];
+      if (month <= withdrawalStartMonth) {
+        // Accumulation phase
+        for (let i = 0; i < n; i++) {
+          holdings[i] += monthlyAmount * weights[i];
+        }
+      } else {
+        // Withdrawal phase — draw from each asset proportional to current holdings
+        total = 0;
+        for (let i = 0; i < n; i++) total += holdings[i];
+        if (total > 0) {
+          for (let i = 0; i < n; i++) {
+            holdings[i] -= withdrawalMonthlyAmount * (holdings[i] / total);
+          }
+        }
       }
 
       if (rebalance && month % 12 === 0) {
@@ -69,6 +84,16 @@ function runSimulation(params: SimulationParams): SimulationResult {
 
       total = 0;
       for (let i = 0; i < n; i++) total += holdings[i];
+
+      if (total <= 0) {
+        for (let i = 0; i < n; i++) holdings[i] = 0;
+        total = 0;
+        if (!depleted) {
+          depletionCount++;
+          depleted = true;
+        }
+      }
+
       monthlyTotals[month][sim] = total;
 
     }
@@ -90,7 +115,9 @@ function runSimulation(params: SimulationParams): SimulationResult {
   }
 
   const sortedFinal = Array.from(finalValues).sort((a, b) => a - b);
-  const principal = initialAmount + monthlyAmount * totalMonths;
+  const contributionMonths = withdrawalStartYear > 0 ? Math.min(totalMonths, withdrawalStartYear * 12) : totalMonths;
+  const withdrawalMonths = withdrawalStartYear > 0 ? Math.max(0, totalMonths - withdrawalStartYear * 12) : 0;
+  const principal = initialAmount + monthlyAmount * contributionMonths - withdrawalMonthlyAmount * withdrawalMonths;
 
   for (let sim = 0; sim < numSimulations; sim++) {
     if (finalValues[sim] < principal) principalLossCount++;
@@ -106,6 +133,8 @@ function runSimulation(params: SimulationParams): SimulationResult {
     p75Final: percentile(sortedFinal, 75),
     p90Final: percentile(sortedFinal, 90),
     principalLossProbability: principalLossCount / numSimulations,
+    depletionProbability: depletionCount / numSimulations,
+    withdrawalStartYear,
   };
 }
 

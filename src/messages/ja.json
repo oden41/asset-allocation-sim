@@ -6,7 +6,11 @@
     "initialAmount": "初期投資額（万円）",
     "monthlyAmount": "毎月積立額（万円）",
     "years": "投資期間（年）",
-    "yearsUnit": "年"
+    "yearsUnit": "年",
+    "withdrawalTitle": "取り崩し設定",
+    "withdrawalStartYear": "取り崩し開始",
+    "withdrawalMonthlyAmount": "月額取り崩し額（万円）",
+    "withdrawalNone": "なし"
   },
   "allocation": {
     "title": "資産配分",
@@ -55,6 +59,8 @@
     "lower25": "下位25%",
     "lower10": "下位10%",
     "principalLossProbability": "元本割れ確率（最終資産額が元本を下回る）",
+    "depletionProbability": "資産枯渇確率（投資期間中に資産がゼロになる）",
+    "withdrawalStart": "取り崩し開始",
     "year": "年",
     "tenThousandYen": "万円",
     "frequency": "頻度",

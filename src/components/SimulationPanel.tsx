@@ -26,6 +26,8 @@ export default function SimulationPanel() {
   const [years, setYears] = useState(20);
   const [allocations, setAllocations] = useState<Record<AssetClassId, number>>(DEFAULT_ALLOCATIONS);
   const [rebalance, setRebalance] = useState(true);
+  const [withdrawalStartYear, setWithdrawalStartYear] = useState(0);
+  const [withdrawalMonthlyAmount, setWithdrawalMonthlyAmount] = useState(locale === "en" ? 1 : 10);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const workerRef = useRef<Worker | null>(null);
@@ -80,10 +82,17 @@ export default function SimulationPanel() {
       allocations,
       rebalance,
       numSimulations: NUM_SIMULATIONS,
+      withdrawalStartYear,
+      withdrawalMonthlyAmount,
     };
 
     worker.postMessage(params);
-  }, [initialAmount, monthlyAmount, years, allocations, rebalance, isValid, isRunning]);
+  }, [initialAmount, monthlyAmount, years, allocations, rebalance, isValid, isRunning, withdrawalStartYear, withdrawalMonthlyAmount]);
+
+  const handleYearsChange = (v: number) => {
+    setYears(v);
+    if (withdrawalStartYear > v) setWithdrawalStartYear(v);
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -96,7 +105,12 @@ export default function SimulationPanel() {
             years={years}
             onInitialChange={setInitialAmount}
             onMonthlyChange={setMonthlyAmount}
-            onYearsChange={setYears}
+            onYearsChange={handleYearsChange}
+            withdrawalStartYear={withdrawalStartYear}
+            withdrawalMonthlyAmount={withdrawalMonthlyAmount}
+            onWithdrawalStartYearChange={setWithdrawalStartYear}
+            onWithdrawalMonthlyAmountChange={setWithdrawalMonthlyAmount}
+            maxYears={years}
           />
 
           <AllocationSliders
@@ -125,7 +139,7 @@ export default function SimulationPanel() {
           {result ? (
             <>
               <ResultsSummary result={result} />
-              <PercentileBandChart data={result.percentiles} />
+              <PercentileBandChart data={result.percentiles} withdrawalStartYear={result.withdrawalStartYear} />
               <HistogramChart finalValues={result.finalValues} median={result.medianFinal} />
             </>
           ) : (
