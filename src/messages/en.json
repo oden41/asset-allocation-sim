@@ -8,7 +8,7 @@
     "years": "Investment Period (Years)",
     "yearsUnit": "yrs",
     "withdrawalTitle": "Withdrawal Settings",
-    "withdrawalStartYear": "Withdrawal Start",
+    "withdrawalYears": "Withdrawal Duration",
     "withdrawalMonthlyAmount": "Monthly Withdrawal (K$)",
     "withdrawalNone": "None"
   },

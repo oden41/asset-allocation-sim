@@ -8,7 +8,7 @@
     "years": "投資期間（年）",
     "yearsUnit": "年",
     "withdrawalTitle": "取り崩し設定",
-    "withdrawalStartYear": "取り崩し開始",
+    "withdrawalYears": "取り崩し期間",
     "withdrawalMonthlyAmount": "月額取り崩し額（万円）",
     "withdrawalNone": "なし"
   },

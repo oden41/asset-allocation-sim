@@ -19,7 +19,7 @@ export interface SimulationParams {
   allocations: Record<AssetClassId, number>; // 0-100 (%)
   rebalance: boolean;
   numSimulations: number;
-  withdrawalStartYear: number; // 0 = no withdrawal
+  withdrawalYears: number; // 取り崩し期間（年）。0 = 取り崩しなし
   withdrawalMonthlyAmount: number; // 万円 / K$
 }
 

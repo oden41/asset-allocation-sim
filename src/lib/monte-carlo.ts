@@ -21,10 +21,12 @@ function percentile(sorted: number[], p: number): number {
 }
 
 export function runSimulation(params: SimulationParams): SimulationResult {
-  const { initialAmount, monthlyAmount, years, allocations, rebalance, numSimulations, withdrawalStartYear, withdrawalMonthlyAmount } = params;
-  const totalMonths = years * 12;
+  const { initialAmount, monthlyAmount, years, allocations, rebalance, numSimulations, withdrawalYears, withdrawalMonthlyAmount } = params;
+  // Simulation covers the accumulation phase (years) + the withdrawal phase (withdrawalYears).
+  const totalMonths = (years + (withdrawalYears > 0 ? withdrawalYears : 0)) * 12;
   const n = ASSET_CLASS_IDS.length;
-  const withdrawalStartMonth = withdrawalStartYear > 0 ? withdrawalStartYear * 12 : Infinity;
+  // Withdrawal begins once the accumulation phase ends. Infinity disables withdrawal entirely.
+  const withdrawalStartMonth = withdrawalYears > 0 ? years * 12 : Infinity;
 
   // Convert annual parameters to monthly
   const monthlyReturns = ASSET_CLASS_IDS.map((id) => ASSET_CLASSES[id].annualReturn / 12);
@@ -128,8 +130,8 @@ export function runSimulation(params: SimulationParams): SimulationResult {
   }
 
   const sortedFinal = Array.from(finalValues).sort((a, b) => a - b);
-  const contributionMonths = withdrawalStartYear > 0 ? Math.min(totalMonths, withdrawalStartYear * 12) : totalMonths;
-  const withdrawalMonths = withdrawalStartYear > 0 ? Math.max(0, totalMonths - withdrawalStartYear * 12) : 0;
+  const contributionMonths = years * 12;
+  const withdrawalMonths = withdrawalYears > 0 ? withdrawalYears * 12 : 0;
   const principal = initialAmount + monthlyAmount * contributionMonths - withdrawalMonthlyAmount * withdrawalMonths;
 
   for (let sim = 0; sim < numSimulations; sim++) {
@@ -147,6 +149,6 @@ export function runSimulation(params: SimulationParams): SimulationResult {
     p90Final: percentile(sortedFinal, 90),
     principalLossProbability: principalLossCount / numSimulations,
     depletionProbability: depletionCount / numSimulations,
-    withdrawalStartYear,
+    withdrawalStartYear: withdrawalYears > 0 ? years : 0,
   };
 }
